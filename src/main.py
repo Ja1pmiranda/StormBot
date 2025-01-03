@@ -49,19 +49,6 @@ async def criar_missao(interaction: discord.Interaction, nome: str, descricao: s
     accept_button = Button(label="Aceitar", style=discord.ButtonStyle.green)
 
     async def accept_callback(interaction: discord.Interaction):
-        # Enviar mensagem privada para os participantes (individuais e de grupo)
-        participantes = await obter_participantes(interaction.message.embeds[0].fields[-1].value)
-        
-        for participante_id in participantes:
-            try:
-                user = await client.fetch_user(participante_id)  # Obtém o usuário a partir do ID
-                await user.send(content=f"Você foi adicionado à missão **{nome}**! Boa sorte! 🎉")
-            except discord.Forbidden:
-                await interaction.response.send_message(
-                    content="Não foi possível enviar uma mensagem privada para todos os participantes.",
-                    ephemeral=True
-                )
-
         modal = AddParticipantsModal(embed_message=interaction.message)
         await interaction.response.send_modal(modal)
 
