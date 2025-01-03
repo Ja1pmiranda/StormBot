@@ -16,12 +16,7 @@ json_path = os.path.join("dados", "dados.json")
 with open(json_path, "r") as f:
     dados = json.load(f)
 
-# Criar um dicionário com os nomes e os user_ids
-NOMES_E_IDS = {p["nome"]: int(p["user_id"]) for p in dados["nomes"]}
-
-# Criar um dicionário com os grupos e os seus membros
-GRUPOS_E_IDS = {grupo: [int(membro["user_id"]) for membro in membros] 
-                for grupo, membros in dados["grupos"].items()}
+# Removido as variáveis VALID_CATEGORIES e VALID_REGIONS
 
 class MyClient(discord.Client):
     def __init__(self):
@@ -78,24 +73,14 @@ async def criar_missao(interaction: discord.Interaction, nome: str, descricao: s
     await interaction.response.send_message(embed=embed, view=view)
 
 
-async def obter_participantes(participantes_str: str):
-    participantes = []
-    for participante in participantes_str.split(', '):
-        if participante in NOMES_E_IDS:
-            participantes.append(NOMES_E_IDS[participante])
-        elif participante in GRUPOS_E_IDS:
-            participantes.extend(GRUPOS_E_IDS[participante])
-    return participantes
-
-
 class AddParticipantsModal(discord.ui.Modal):
     def __init__(self, embed_message: discord.Message):
         super().__init__(title="Adicionar Participantes")
         self.embed_message = embed_message
 
         self.participant_name = discord.ui.TextInput(
-            label="Nome do Participante ou Grupo",
-            placeholder="Digite o nome ou grupo...",
+            label="Nome do Participante",
+            placeholder="Digite o nome...",
             required=True
         )
         self.add_item(self.participant_name)
@@ -103,25 +88,13 @@ class AddParticipantsModal(discord.ui.Modal):
     async def on_submit(self, interaction: discord.Interaction):
         new_participant = self.participant_name.value.strip()
 
-        participantes = []
-        if new_participant in NOMES_E_IDS:
-            participantes = [new_participant]
-        elif new_participant in GRUPOS_E_IDS:
-            participantes = GRUPOS_E_IDS[new_participant]
-        else:
-            await interaction.response.send_message(
-                content=f"O participante ou grupo `{new_participant}` não está na lista de permitidos.",
-                ephemeral=True
-            )
-            return
-
         embed = self.embed_message.embeds[0]
         current_participants = embed.fields[-1].value
 
         if current_participants == "Nenhum participante ainda.":
-            updated_participants = ", ".join(participantes)
+            updated_participants = new_participant
         else:
-            updated_participants = f"{current_participants}, {', '.join(participantes)}"
+            updated_participants = f"{current_participants}, {new_participant}"
 
         embed.set_field_at(
             index=4,
@@ -146,7 +119,7 @@ class AddParticipantsModal(discord.ui.Modal):
 
         await self.embed_message.edit(embed=embed, view=view)
         await interaction.response.send_message(
-            content=f"Participante(s) `{new_participant}` adicionado(s) à missão.",
+            content=f"Participante `{new_participant}` adicionado à missão.",
             ephemeral=True
         )
 

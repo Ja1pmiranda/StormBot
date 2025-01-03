@@ -1,15 +1,34 @@
 {
-    "niveis": ["Divíno", "Imperial", "Real", "Santo", "Avançado", "Intermediário", "Iniciante"],
-    
-    "nomes": [
-      {"nome": "João", "user_id": "123456789012345678"},
-      {"nome": "Maria", "user_id": "987654321098765432"}
+    "niveis": [
+      "Divíno",
+      "Imperial",
+      "Real",
+      "Santo",
+      "Avançado",
+      "Intermediário",
+      "Iniciante"
     ],
-    "grupos": {
-      "Herois": [
-        {"nome": "João", "user_id": "123456789012345678"},
-        {"nome": "Mario", "user_id": "234567890123456789"},
-        {"nome": "Arnaldo", "user_id": "345678901234567890"}
-      ]
-    }
-  }
+
+    "nomes": [
+        "Eivdra",
+        "Durin",
+        "Forseti",
+        "Modia",
+        "Argos",
+        "Triton",
+        "Zagreus",
+        "Melinoe",
+        "Kymopolea",
+        "Benthesikyme",
+        "Artio",
+        "Gwyn",
+        "Maeve",
+        "Meridian",
+        "Baubas",
+        "Dazbog",
+        "Veliuona",
+        "Arcanthys",
+        "Vael"
+    ]
+
+}
