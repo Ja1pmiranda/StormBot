@@ -1,7 +1,7 @@
 # **Storm Bot**
 
 ## Setup
-1º Criar o aruivo **.env** na pasta raiz com o ID do servido e o token do bot
+1º Atualize o aruivo **.env_exemplo** na pasta raiz para **.env** com o ID do servido e o token do bot
 - STORM_TOKEN =
 - ID_STORM = 
 
