@@ -1,8 +1,14 @@
 import discord
 from discord import app_commands
 from discord.ui import Button, View, Modal, TextInput
+from dotenv import load_dotenv
+import os
 
-id_do_servidor = 944450988742410280
+load_dotenv()
+
+# Acessa as variáveis
+token = os.getenv("STORM_TOKEN")
+id_do_servidor = os.getenv("ID_STORM")
 
 
 
@@ -105,4 +111,4 @@ class AddParticipantsModal(Modal):
         )
 
 
-aclient.run('')
+aclient.run(token)
