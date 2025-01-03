@@ -1,47 +1,72 @@
 import discord
 from discord import app_commands
-from discord.ui import Button, View, Modal, TextInput
+import json
+from discord.ui import Button, View
 from dotenv import load_dotenv
 import os
 
+# Carregar variáveis de ambiente
 load_dotenv()
 
-# Acessa as variáveis
 token = os.getenv("STORM_TOKEN")
-id_do_servidor = os.getenv("ID_STORM")
+id_do_servidor = int(os.getenv("ID_STORM"))
 
+# Carregar dados do JSON
+json_path = os.path.join("dados", "dados.json")
+with open(json_path, "r") as f:
+    dados = json.load(f)
 
+# Criar um dicionário com os nomes e os user_ids
+NOMES_E_IDS = {p["nome"]: int(p["user_id"]) for p in dados["nomes"]}
 
-class client(discord.Client):
+# Criar um dicionário com os grupos e os seus membros
+GRUPOS_E_IDS = {grupo: [int(membro["user_id"]) for membro in membros] 
+                for grupo, membros in dados["grupos"].items()}
+
+class MyClient(discord.Client):
     def __init__(self):
         super().__init__(intents=discord.Intents.default())
+        self.tree = app_commands.CommandTree(self)
         self.synced = False
 
     async def on_ready(self):
-        await self.wait_until_ready()
         if not self.synced:
-            await tree.sync(guild=discord.Object(id=id_do_servidor))
+            await self.tree.sync(guild=discord.Object(id=id_do_servidor))
             self.synced = True
+        print(f"Bot conectado como {self.user}")
 
-        print(f"Entramos como {self.user}.")
+
+client = MyClient()
+
+@client.tree.command(guild=discord.Object(id=id_do_servidor), name="postar_missao", description="Postar uma nova missão.")
+@app_commands.describe(nome="Nome da missão", descricao="Descrição da missão", duracao="Duração da missão")
+async def postar_missao(interaction: discord.Interaction, nome: str, descricao: str, duracao: str):
+    await criar_missao(interaction, nome, descricao, duracao)
 
 
-aclient = client()
-tree = app_commands.CommandTree(aclient)
-
-# Comando de Postar Missão
-@tree.command(guild=discord.Object(id=id_do_servidor), name="postar_missao", description="Postar uma nova missão")
-async def postar_missao(interaction: discord.Interaction, nome: str, nivel: int, descricao: str, duracao: str):
+async def criar_missao(interaction: discord.Interaction, nome: str, descricao: str, duracao: str):
     embed = discord.Embed(title=f"Missão: {nome}", color=discord.Color.blue())
-    embed.add_field(name="Nível", value=nivel, inline=True)
     embed.add_field(name="Descrição", value=descricao, inline=False)
     embed.add_field(name="Duração", value=duracao, inline=True)
     embed.add_field(name="Participantes", value="Nenhum participante ainda.", inline=False)
+    embed.set_footer(text="Use o botão 'Aceitar' para participar da missão!")
 
-    # Botão de Aceitar
     accept_button = Button(label="Aceitar", style=discord.ButtonStyle.green)
 
     async def accept_callback(interaction: discord.Interaction):
+        # Enviar mensagem privada para os participantes (individuais e de grupo)
+        participantes = await obter_participantes(interaction.message.embeds[0].fields[-1].value)
+        
+        for participante_id in participantes:
+            try:
+                user = await client.fetch_user(participante_id)  # Obtém o usuário a partir do ID
+                await user.send(content=f"Você foi adicionado à missão **{nome}**! Boa sorte! 🎉")
+            except discord.Forbidden:
+                await interaction.response.send_message(
+                    content="Não foi possível enviar uma mensagem privada para todos os participantes.",
+                    ephemeral=True
+                )
+
         modal = AddParticipantsModal(embed_message=interaction.message)
         await interaction.response.send_modal(modal)
 
@@ -53,62 +78,77 @@ async def postar_missao(interaction: discord.Interaction, nome: str, nivel: int,
     await interaction.response.send_message(embed=embed, view=view)
 
 
-class AddParticipantsModal(Modal):
+async def obter_participantes(participantes_str: str):
+    participantes = []
+    for participante in participantes_str.split(', '):
+        if participante in NOMES_E_IDS:
+            participantes.append(NOMES_E_IDS[participante])
+        elif participante in GRUPOS_E_IDS:
+            participantes.extend(GRUPOS_E_IDS[participante])
+    return participantes
+
+
+class AddParticipantsModal(discord.ui.Modal):
     def __init__(self, embed_message: discord.Message):
         super().__init__(title="Adicionar Participantes")
         self.embed_message = embed_message
 
-        # Campo para inserir participantes
-        self.participants = TextInput(
-            label="Nomes dos participantes",
-            placeholder="João, Mario, Maria, Andre",
+        self.participant_name = discord.ui.TextInput(
+            label="Nome do Participante ou Grupo",
+            placeholder="Digite o nome ou grupo...",
             required=True
         )
-        self.add_item(self.participants)
+        self.add_item(self.participant_name)
 
     async def on_submit(self, interaction: discord.Interaction):
-        # Obter o embed original
-        embed = self.embed_message.embeds[0]
+        new_participant = self.participant_name.value.strip()
 
-        # Adicionar novos participantes
-        new_participants = [name.strip() for name in self.participants.value.split(",")]
-        current_participants = embed.fields[-1].value
-        if current_participants == "Nenhum participante ainda.":
-            updated_participants = "\n".join(new_participants)
+        participantes = []
+        if new_participant in NOMES_E_IDS:
+            participantes = [new_participant]
+        elif new_participant in GRUPOS_E_IDS:
+            participantes = GRUPOS_E_IDS[new_participant]
         else:
-            updated_participants = f"{current_participants}\n" + "\n".join(new_participants)
+            await interaction.response.send_message(
+                content=f"O participante ou grupo `{new_participant}` não está na lista de permitidos.",
+                ephemeral=True
+            )
+            return
 
-        # Atualizar o campo de participantes no embed
+        embed = self.embed_message.embeds[0]
+        current_participants = embed.fields[-1].value
+
+        if current_participants == "Nenhum participante ainda.":
+            updated_participants = ", ".join(participantes)
+        else:
+            updated_participants = f"{current_participants}, {', '.join(participantes)}"
+
         embed.set_field_at(
-            index=3,  # O índice do campo de "Participantes"
+            index=4,
             name="Participantes",
             value=updated_participants,
             inline=False
         )
 
-        # Criar botão de Concluir
         conclude_button = Button(label="Concluir", style=discord.ButtonStyle.red)
 
         async def conclude_callback(interaction: discord.Interaction):
             await interaction.response.send_message(
                 content=f"A missão **{embed.title}** foi concluída com sucesso! 🎉",
-                ephemeral=True
+                ephemeral=False
             )
-            await self.embed_message.edit(view=None)  # Remove os botões após concluir.
+            await self.embed_message.edit(view=None)
 
         conclude_button.callback = conclude_callback
 
-        # Atualizar a mensagem original com o botão "Concluir"
         view = View()
         view.add_item(conclude_button)
 
         await self.embed_message.edit(embed=embed, view=view)
-
-        # Confirmação de que os participantes foram adicionados
         await interaction.response.send_message(
-            content=f"Participantes adicionados: {', '.join(new_participants)}",
+            content=f"Participante(s) `{new_participant}` adicionado(s) à missão.",
             ephemeral=True
         )
 
 
-aclient.run(token)
+client.run(token)
