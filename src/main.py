@@ -11,7 +11,6 @@ token = os.getenv("STORM_TOKEN")
 id_do_servidor = os.getenv("ID_STORM")
 
 
-
 class client(discord.Client):
     def __init__(self):
         super().__init__(intents=discord.Intents.default())
