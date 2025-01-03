@@ -91,7 +91,7 @@ class AddParticipantsModal(Modal):
         async def conclude_callback(interaction: discord.Interaction):
             await interaction.response.send_message(
                 content=f"A missão **{embed.title}** foi concluída com sucesso! 🎉",
-                ephemeral=True
+                ephemeral=False
             )
             await self.embed_message.edit(view=None)  # Remove os botões após concluir.
 
