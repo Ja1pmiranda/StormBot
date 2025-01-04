@@ -1,3 +1,7 @@
 ambientevirtual
 .env
 .env_exemplo
+rodar_bot.sh
+rodar_bot.bat
+setup_env.sh
+setup_env.bat
