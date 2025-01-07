@@ -31,6 +31,7 @@ class MyClient(discord.Client):
         print(f"Bot conectado como {self.user}")
 
 client = MyClient()
+##--------------------------------------------------POSTAR MISSÃO----------------------------------------------------
 
 @client.tree.command(guild=discord.Object(id=id_do_servidor), name="postar_missao", description="Postar uma nova missão.")
 @app_commands.describe(
