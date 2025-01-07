@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 import json
-from discord.ui import Button, View
+from discord.ui import Button, View, Select
 from dotenv import load_dotenv
 import os
 
@@ -12,11 +12,11 @@ token = os.getenv("STORM_TOKEN")
 id_do_servidor = int(os.getenv("ID_STORM"))
 
 # Carregar dados do JSON
-json_path = os.path.join("dados", "dados.json")
-with open(json_path, "r") as f:
-    dados = json.load(f)
+with open(r"./dados/dados.json", "r", encoding="utf-8") as file:
+    dados = json.load(file)
 
-# Removido as variáveis VALID_CATEGORIES e VALID_REGIONS
+niveis = dados["niveis"]
+PARTICIPANTES = dados["nomes"]
 
 class MyClient(discord.Client):
     def __init__(self):
@@ -30,27 +30,31 @@ class MyClient(discord.Client):
             self.synced = True
         print(f"Bot conectado como {self.user}")
 
-
 client = MyClient()
 
 @client.tree.command(guild=discord.Object(id=id_do_servidor), name="postar_missao", description="Postar uma nova missão.")
-@app_commands.describe(nome="Nome da missão", descricao="Descrição da missão", duracao="Duração da missão")
-async def postar_missao(interaction: discord.Interaction, nome: str, descricao: str, duracao: str):
-    await criar_missao(interaction, nome, descricao, duracao)
+@app_commands.describe(
+    nome="Nome da missão",
+    descricao="Descrição da missão",
+    duracao="Duração da missão",
+    categorias="Categorias da missão",
+    obs="Observações adicionais"
+)
+async def postar_missao(interaction: discord.Interaction, nome: str, descricao: str, duracao: str, categorias: str, obs: str):
+    await criar_missao(interaction, nome, descricao, duracao, categorias, obs)
 
-
-async def criar_missao(interaction: discord.Interaction, nome: str, descricao: str, duracao: str):
-    embed = discord.Embed(title=f"Missão: {nome}", color=discord.Color.blue())
+async def criar_missao(interaction: discord.Interaction, nome: str, descricao: str, duracao: str, categorias: str, obs: str):
+    embed = discord.Embed(title=f" **{nome}**", color=discord.Color.red())
     embed.add_field(name="Descrição", value=descricao, inline=False)
     embed.add_field(name="Duração", value=duracao, inline=True)
+    embed.add_field(name="Categorias", value=categorias, inline=True)
+    embed.add_field(name="Observações", value=obs, inline=False)
     embed.add_field(name="Participantes", value="Nenhum participante ainda.", inline=False)
-    embed.set_footer(text="Use o botão 'Aceitar' para participar da missão!")
 
     accept_button = Button(label="Aceitar", style=discord.ButtonStyle.green)
 
     async def accept_callback(interaction: discord.Interaction):
-        modal = AddParticipantsModal(embed_message=interaction.message)
-        await interaction.response.send_modal(modal)
+        await selecionar_participantes(interaction, nome, embed, interaction.message)
 
     accept_button.callback = accept_callback
 
@@ -59,56 +63,57 @@ async def criar_missao(interaction: discord.Interaction, nome: str, descricao: s
 
     await interaction.response.send_message(embed=embed, view=view)
 
+async def selecionar_participantes(interaction: discord.Interaction, nome: str, embed: discord.Embed, original_message: discord.Message):
+    select_menu = Select(
+        placeholder="Selecione os participantes",
+        options=[discord.SelectOption(label=nome, value=nome) for nome in PARTICIPANTES],
+        min_values=1,  # Número mínimo de seleções
+        max_values=len(PARTICIPANTES)  # Número máximo de seleções
+    )
 
-class AddParticipantsModal(discord.ui.Modal):
-    def __init__(self, embed_message: discord.Message):
-        super().__init__(title="Adicionar Participantes")
-        self.embed_message = embed_message
+    async def select_callback(interaction: discord.Interaction):
+        # Responder imediatamente para evitar o "this interaction failed"
+        await interaction.response.defer(ephemeral=True)
 
-        self.participant_name = discord.ui.TextInput(
-            label="Nome do Participante",
-            placeholder="Digite o nome...",
-            required=True
-        )
-        self.add_item(self.participant_name)
+        selecionados = select_menu.values
+        participantes_str = ", ".join(selecionados)
 
-    async def on_submit(self, interaction: discord.Interaction):
-        new_participant = self.participant_name.value.strip()
+        # Atualizar o embed com os participantes selecionados
+        embed.set_field_at(index=4, name="Participantes", value=participantes_str, inline=False)
+        embed.color = discord.Color.gold()
 
-        embed = self.embed_message.embeds[0]
-        current_participants = embed.fields[-1].value
+        # Criar botão "Concluir"
+        concluir_button = Button(label="Concluir", style=discord.ButtonStyle.blurple)
 
-        if current_participants == "Nenhum participante ainda.":
-            updated_participants = new_participant
-        else:
-            updated_participants = f"{current_participants}, {new_participant}"
+        async def concluir_callback(interaction: discord.Interaction):
 
-        embed.set_field_at(
-            index=4,
-            name="Participantes",
-            value=updated_participants,
-            inline=False
-        )
+            embed.color = discord.Color.green()
 
-        conclude_button = Button(label="Concluir", style=discord.ButtonStyle.red)
+            await original_message.edit(embed=embed, view=None)
 
-        async def conclude_callback(interaction: discord.Interaction):
             await interaction.response.send_message(
-                content=f"A missão **{embed.title}** foi concluída com sucesso! 🎉",
+                content=f"A missão **{nome}** foi concluída com sucesso! 🎉",
                 ephemeral=False
             )
-            await self.embed_message.edit(view=None)
+            
 
-        conclude_button.callback = conclude_callback
+        concluir_button.callback = concluir_callback
 
+        # Atualizar a mensagem original
         view = View()
-        view.add_item(conclude_button)
+        view.add_item(concluir_button)
 
-        await self.embed_message.edit(embed=embed, view=view)
-        await interaction.response.send_message(
-            content=f"Participante `{new_participant}` adicionado à missão.",
-            ephemeral=True
-        )
+        await original_message.edit(embed=embed, view=view)
 
+    select_menu.callback = select_callback
+
+    view = View()
+    view.add_item(select_menu)
+
+    await interaction.response.send_message(
+        content="Escolha os participantes da missão:",
+        view=view,
+        ephemeral=True
+    )
 
 client.run(token)
