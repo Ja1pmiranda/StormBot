@@ -73,7 +73,7 @@ async def selecionar_participantes(interaction: discord.Interaction, nome: str, 
     )
 
     async def select_callback(interaction: discord.Interaction):
-        # Responder imediatamente para evitar o "this interaction failed"
+        # Defere a interação imediatamente
         await interaction.response.defer(ephemeral=True)
 
         selecionados = select_menu.values
@@ -87,34 +87,35 @@ async def selecionar_participantes(interaction: discord.Interaction, nome: str, 
         concluir_button = Button(label="Concluir", style=discord.ButtonStyle.blurple)
 
         async def concluir_callback(interaction: discord.Interaction):
-
             embed.color = discord.Color.green()
-
             await original_message.edit(embed=embed, view=None)
 
             await interaction.response.send_message(
-                content=f"A missão **{nome}** foi concluída com sucesso! 🎉",
+                content=f"**Missão concluída**🎉:\n{nome}\n**Participantes:**\n{participantes_str}",
                 ephemeral=False
             )
-            
 
         concluir_button.callback = concluir_callback
 
-        # Atualizar a mensagem original
+        # Atualizar o View para manter o Select e adicionar o botão "Concluir"
         view = View()
-        view.add_item(concluir_button)
+        view.add_item(select_menu)  # Adiciona o Select novamente
+        view.add_item(concluir_button)  # Adiciona o botão "Concluir"
 
+        # Atualizar a mensagem original com o novo View
         await original_message.edit(embed=embed, view=view)
 
     select_menu.callback = select_callback
 
+    # Atualizar a mensagem original com o Select
     view = View()
     view.add_item(select_menu)
 
-    await interaction.response.send_message(
-        content="Escolha os participantes da missão:",
-        view=view,
-        ephemeral=True
-    )
+    # Defere a interação inicial
+    await interaction.response.defer()
+
+    await original_message.edit(view=view)
+
+
 
 client.run(token)
