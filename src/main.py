@@ -48,8 +48,8 @@ async def criar_missao(interaction: discord.Interaction, nome: str, descricao: s
     embed = discord.Embed(title=f" **{nome}**", color=discord.Color.red())
     embed.add_field(name="Descrição", value=descricao, inline=False)
     embed.add_field(name="Duração", value=duracao, inline=True)
-    embed.add_field(name="Categorias", value=categorias, inline=True)
-    embed.add_field(name="Observações", value=obs, inline=False)
+    embed.add_field(name="Categorias", value=categorias, inline=False)
+    embed.add_field(name="Observações", value=obs, inline=True)
     embed.add_field(name="Participantes", value="Nenhum participante ainda.", inline=False)
 
     accept_button = Button(label="Aceitar", style=discord.ButtonStyle.green)
