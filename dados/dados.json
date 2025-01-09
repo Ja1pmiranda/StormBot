@@ -1,34 +1,34 @@
 {
     "niveis": [
+      "Cósmico",
       "Divíno",
       "Imperial",
       "Real",
       "Santo",
       "Avançado",
-      "Intermediário",
-      "Iniciante"
+      "Principiante"
     ],
 
-    "nomes": [
-        "Eivdra",
-        "Durin",
-        "Forseti",
-        "Modi",
-        "Argos",
-        "Triton",
-        "Zagreus",
-        "Melinoe",
-        "Kymopolea",
-        "Benthesikyme",
-        "Artio",
-        "Gwyn",
-        "Maeve",
-        "Meridian",
-        "Baubas",
-        "Dazbog",
-        "Veliuona",
-        "Arcanthys",
-        "Vael"
-    ]
+    "nomes": {
+        "Eivdra":471502525074243584,
+        "Durin":0,
+        "Forseti":0,
+        "Modi":395665298805489664,
+        "Argos":0,
+        "Triton":0,
+        "Zagreus":0,
+        "Melinoe":0,
+        "Kymopolea":0,
+        "Benthesikyme":0,
+        "Artio":0,
+        "Gwyn":0,
+        "Maeve":0,
+        "Meridian":0,
+        "Baubas":0,
+        "Dazbog":0,
+        "Veliuona":0,
+        "Arcanthys": 0,
+        "Vael":0
+    }
 
 }

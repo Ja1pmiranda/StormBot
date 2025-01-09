@@ -46,7 +46,23 @@ async def postar_missao(interaction: discord.Interaction, nome: str, descricao: 
     await criar_missao(interaction, nome, descricao, duracao, categorias, obs)
 
 async def criar_missao(interaction: discord.Interaction, nome: str, descricao: str, duracao: str, categorias: str, obs: str):
-    embed = discord.Embed(title=f" **{nome.upper()}**", color=discord.Color.red())
+    embed = discord.Embed(title=f" **{nome.upper()}**")
+    nome_do_canal = interaction.channel.name
+    if nome_do_canal.lower() == "principiante":
+        embed.color = discord.Color.from_str('#8B4513')
+    elif nome_do_canal.lower() == "avançado":
+        embed.color = discord.Color.from_str('#FFD700')
+    elif nome_do_canal.lower() == "santo":
+        embed.color = discord.Color.from_str('#00FF00')
+    elif nome_do_canal.lower() == "real":
+        embed.color = discord.Color.from_str('#00BFFF')
+    elif nome_do_canal.lower() == "imperial":
+        embed.color = discord.Color.from_str('#FF0000')
+    elif nome_do_canal.lower() == "divino":
+        embed.color = discord.Color.from_str('#000000')
+    elif nome_do_canal.lower() == "cosmico":
+        embed.color = discord.Color.from_str('#F0F8FF')
+    
     embed.add_field(name="Descrição", value=descricao, inline=False)
     embed.add_field(name="Duração", value=duracao, inline=True)
     embed.add_field(name="Categorias", value=categorias, inline=False)
@@ -93,7 +109,7 @@ async def selecionar_participantes(interaction: discord.Interaction, nome: str, 
 
         # Atualizar o embed com os participantes
         embed.set_field_at(index=4, name="Participantes", value=participantes_str, inline=False)
-        embed.color = discord.Color.gold()
+        #embed.color = discord.Color.gold()
 
 
         # Criar botão "Concluir"
@@ -117,9 +133,10 @@ async def selecionar_participantes(interaction: discord.Interaction, nome: str, 
 
         async def concluir_callback(interaction: discord.Interaction):
             link_missao = original_message.jump_url
-            embed.color = discord.Color.green()
+            #embed.color = discord.Color.green()
             await original_message.edit(embed=embed, view=None)
 
+            # Enviar mensagem para o mural
             await interaction.response.send_message(
                 content=f"**Missão concluída**🎉:\n"
                 f"[{nome.upper()}]({link_missao})\n"
@@ -127,9 +144,8 @@ async def selecionar_participantes(interaction: discord.Interaction, nome: str, 
                 f"{participantes_str}",
                 ephemeral=False
             )
-            
-            
-            if mural: #verifica se o canal mural existe                
+
+            if mural:  # Verifica se o canal mural existe
                 await mural.send(
                     content=f"🎯 **Missão concluída!**\n"
                     f"**Missão:** [{nome.upper()}]({link_missao})\n"
@@ -141,6 +157,32 @@ async def selecionar_participantes(interaction: discord.Interaction, nome: str, 
                     content="Erro: O canal Mural não foi encontrado.",
                     ephemeral=True
                 )
+
+            # Enviar mensagem privada para cada participante utilizando o ID
+            for participante_nome in lista_atual:
+                # Buscar o ID do participante no dicionário
+                participante_id = dados["nomes"].get(participante_nome)
+
+                if participante_id:  # Se o ID foi encontrado
+                    try:
+                        # Buscar o usuário diretamente pelo ID
+                        participante = await client.fetch_user(participante_id)
+                        if participante:  # Verifica se o usuário foi encontrado
+                            # Enviar DM
+                            await participante.send(
+                                content=f"🎯 A missão **{nome.upper()}** foi concluída com sucesso!\n"
+                                        f"Confira os detalhes da missão aqui: [{nome.upper()}]({link_missao})"
+                            )
+    
+                    except discord.errors.Forbidden:
+                        # Caso o bot não tenha permissão para enviar DM
+                        print(f"Não foi possível enviar DM para {participante_nome} (ID: {participante_id})")
+                    except discord.errors.HTTPException as e:
+                        # Tratar outros erros relacionados ao envio de mensagens
+                        print(f"Erro ao enviar DM para {participante_nome} (ID: {participante_id}): {e}")
+                else:
+                    print(f"ID não encontrado para o participante {participante_nome}")
+
             
 
         concluir_button.callback = concluir_callback
