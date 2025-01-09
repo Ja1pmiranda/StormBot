@@ -48,20 +48,24 @@ async def postar_missao(interaction: discord.Interaction, nome: str, descricao: 
 async def criar_missao(interaction: discord.Interaction, nome: str, descricao: str, duracao: str, categorias: str, obs: str):
     embed = discord.Embed(title=f" **{nome.upper()}**")
     nome_do_canal = interaction.channel.name
-    if nome_do_canal.lower() == "principiante":
-        embed.color = discord.Color.from_str('#8B4513')
-    elif nome_do_canal.lower() == "avançado":
-        embed.color = discord.Color.from_str('#FFD700')
-    elif nome_do_canal.lower() == "santo":
-        embed.color = discord.Color.from_str('#00FF00')
-    elif nome_do_canal.lower() == "real":
-        embed.color = discord.Color.from_str('#00BFFF')
-    elif nome_do_canal.lower() == "imperial":
-        embed.color = discord.Color.from_str('#FF0000')
-    elif nome_do_canal.lower() == "divino":
-        embed.color = discord.Color.from_str('#000000')
-    elif nome_do_canal.lower() == "cosmico":
-        embed.color = discord.Color.from_str('#F0F8FF')
+    match nome_do_canal.lower():
+        case "principiante":
+            embed.color = discord.Color.from_str('#8B4513')  # Marrom
+        case "avançado":
+            embed.color = discord.Color.from_str('#FFD700')  # Dourado
+        case "santo":
+            embed.color = discord.Color.from_str('#00FF00')  # Verde
+        case "real":
+            embed.color = discord.Color.from_str('#00BFFF')  # Azul brilhante
+        case "imperial":
+            embed.color = discord.Color.from_str('#FF0000')  # Vermelho
+        case "divino":
+            embed.color = discord.Color.from_str('#000000')  # Preto
+        case "cosmico":
+            embed.color = discord.Color.from_str('#FFFFFF')  # Branco
+        case _:
+            embed.color = discord.Color.default()  # Cor padrão se nenhum caso for correspondido
+
     
     embed.add_field(name="Descrição", value=descricao, inline=False)
     embed.add_field(name="Duração", value=duracao, inline=True)
