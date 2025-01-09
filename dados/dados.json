@@ -70,26 +70,74 @@
         "Maui":0
     },
 
-    "nomes2": {
-        "Eivdra":471502525074243584, 
-        "Durin":267022239474515969,
-        "Forseti":318218465028734976,
-        "Modi":395665298805489664,
+    "nomes_europa": {
+        "Vael":166732375903043585,
+        "Arcanthys":149619261067755520,
+        "Fionn":312031201584218112,
+        "Maeve":691465323353735289,
+        "Aisling":411914719486803979,
+        "Artio":1155245499851476992,
         "Argos":1157022228454580314,
         "Triton":311007172181884928,
         "Zagreus":386291980369395723,
+        "Kymopoleia":463073193325834249,
         "Melinoe":1203148903348969542,
-        "Kymopolea":463073193325834249,
         "Benthesikyme":813046979734142996,
-        "Artio":1155245499851476992,
-        "Gwyn":312031201584218112,
-        "Maeve":691465323353735289,
-        "Meridian":411914719486803979,
+        "Forseti":318218465028734976,
+        "Durin":267022239474515969,
+        "Eivdra":471502525074243584,
+        "Modi":395665298805489664,
         "Baubas":541473760306528258,
-        "Dazbog":549029541914476575,
         "Veliuona":600803310412496898,
-        "Arcanthys":149619261067755520,
-        "Vael":166732375903043585
+        "Dazbog":549029541914476575
+    },
+
+    "nomes_africa/oceania":{
+        "Ramses":0,
+        "Nitocris":0,
+        "Merit Ptah":0,
+        "Hatshepsup":0,
+        "Seti":0,
+        "Qebehut":0,
+        "Samedi":0,
+        "Mama Odi":0,
+        "Mahui Iki":0,
+        "Maui":0
+    },
+
+    "nomes_asia1":{
+        "Gozen":0,
+        "Hatori":0,
+        "Musashi":0,
+        "Senji":0,
+        "Nohime":0,
+        "Osakabehime":0,
+        "Abe no Seimei":0,
+        "Nu Wa":0,
+        "Da Shi":0,
+        "Bikou":0,
+        "Qin":0,
+        "Mulan":0,
+        "Heixin":0,
+        "Iaohu Zuo":0        
+    },
+
+    "nomes_asia2":{
+        "Karna":0,
+        "Arjuna":0,
+        "Soma":0,
+        "Bhima":0,
+        "Nakula":0,
+        "Sahadeva":0,
+        "Narada":0,
+        "Shaka":0,
+        "Lakshmiba":0,
+        "Gilgamesh":0,
+        "Hassan":0,
+        "Solomon":0,
+        "Semiramis":0,
+        "Sheherazade":0,
+        "Rathsi":0
     }
 
 }
