@@ -46,7 +46,7 @@ async def postar_missao(interaction: discord.Interaction, nome: str, descricao: 
     await criar_missao(interaction, nome, descricao, duracao, categorias, obs)
 
 async def criar_missao(interaction: discord.Interaction, nome: str, descricao: str, duracao: str, categorias: str, obs: str):
-    embed = discord.Embed(title=f" **{nome}**", color=discord.Color.red())
+    embed = discord.Embed(title=f" **{nome.upper()}**", color=discord.Color.red())
     embed.add_field(name="Descrição", value=descricao, inline=False)
     embed.add_field(name="Duração", value=duracao, inline=True)
     embed.add_field(name="Categorias", value=categorias, inline=False)
@@ -92,10 +92,11 @@ async def selecionar_participantes(interaction: discord.Interaction, nome: str, 
         if mural: #verifica se o canal mural existe
             link_missao = original_message.jump_url
             await mural.send(
-                content=f"A missão **{nome}** foi aceita por\n"
+                content=f"A missão **{nome.upper()}** foi aceita por\n"
                 f"**{participantes_str}**\n"
-                f"Confira os detalhes aqui: [{nome}]({link_missao})",
+                f"Confira os detalhes aqui: [{nome.upper()}]({link_missao})"
             )
+            await mural.send(embed=embed)
         else:
             await interaction.response.send_message(
                 content="Erro: O canal Mural não foi encontrado.",
@@ -103,26 +104,27 @@ async def selecionar_participantes(interaction: discord.Interaction, nome: str, 
             )
 
         async def concluir_callback(interaction: discord.Interaction):
+            link_missao = original_message.jump_url
             embed.color = discord.Color.green()
             await original_message.edit(embed=embed, view=None)
 
             await interaction.response.send_message(
                 content=f"**Missão concluída**🎉:\n"
-                f"{nome}\n"
+                f"[{nome.upper()}]({link_missao})\n"
                 f"**Participantes:**\n"
                 f"{participantes_str}",
                 ephemeral=False
             )
-
+            
             
             if mural: #verifica se o canal mural existe
-                link_missao = original_message.jump_url
+                
                 await mural.send(
                     content=f"🎯 **Missão concluída!**\n"
-                    f"**Nome:** {nome}\n"
+                    f"**Missão:** [{nome.upper()}]({link_missao})\n"
                     f"**Participantes:** {participantes_str}\n"
-                    f"Confira os detalhes aqui: [{nome}]({link_missao})",
                 )
+                await mural.send(embed=embed)
             else:
                 await interaction.response.send_message(
                     content="Erro: O canal Mural não foi encontrado.",
