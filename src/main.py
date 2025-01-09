@@ -10,6 +10,7 @@ load_dotenv()
 
 token = os.getenv("STORM_TOKEN")
 id_do_servidor = int(os.getenv("ID_STORM"))
+mural_id = int(os.getenv("ID_MURAL"))
 
 # Carregar dados do JSON
 with open(r"./dados/dados.json", "r", encoding="utf-8") as file:
@@ -86,14 +87,48 @@ async def selecionar_participantes(interaction: discord.Interaction, nome: str, 
         # Criar botão "Concluir"
         concluir_button = Button(label="Concluir", style=discord.ButtonStyle.blurple)
 
+        # Mandar mensagem no mural
+        mural = interaction.guild.get_channel(mural_id)
+        if mural: #verifica se o canal mural existe
+            link_missao = original_message.jump_url
+            await mural.send(
+                content=f"A missão **{nome}** foi aceita por\n"
+                f"**{participantes_str}**\n"
+                f"Confira os detalhes aqui: [{nome}]({link_missao})",
+            )
+        else:
+            await interaction.response.send_message(
+                content="Erro: O canal Mural não foi encontrado.",
+                ephemeral=True
+            )
+
         async def concluir_callback(interaction: discord.Interaction):
             embed.color = discord.Color.green()
             await original_message.edit(embed=embed, view=None)
 
             await interaction.response.send_message(
-                content=f"**Missão concluída**🎉:\n{nome}\n**Participantes:**\n{participantes_str}",
+                content=f"**Missão concluída**🎉:\n"
+                f"{nome}\n"
+                f"**Participantes:**\n"
+                f"{participantes_str}",
                 ephemeral=False
             )
+
+            
+            if mural: #verifica se o canal mural existe
+                link_missao = original_message.jump_url
+                await mural.send(
+                    content=f"🎯 **Missão concluída!**\n"
+                    f"**Nome:** {nome}\n"
+                    f"**Participantes:** {participantes_str}\n"
+                    f"Confira os detalhes aqui: [{nome}]({link_missao})",
+                )
+            else:
+                await interaction.response.send_message(
+                    content="Erro: O canal Mural não foi encontrado.",
+                    ephemeral=True
+                )
+            
 
         concluir_button.callback = concluir_callback
 
