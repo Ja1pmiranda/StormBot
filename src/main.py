@@ -77,12 +77,24 @@ async def selecionar_participantes(interaction: discord.Interaction, nome: str, 
         # Defere a interação imediatamente
         await interaction.response.defer(ephemeral=True)
 
-        selecionados = select_menu.values
-        participantes_str = ", ".join(selecionados)
+        # Obter os participantes ja listados
+        participantes_atuais = embed.fields[4].value
+        if participantes_atuais == "Nenhum participante ainda.":
+            participantes_atuais = ""
+        
+        lista_atual = [p.strip() for p in participantes_atuais.split(",") if p.strip()]
 
-        # Atualizar o embed com os participantes selecionados
+        # Adicionar novos participantes
+        novos_selecionados = select_menu.values
+        lista_atual.extend([p for p in novos_selecionados if p not in lista_atual])
+
+        #Atualiza a lista final
+        participantes_str = ", ".join(lista_atual)
+
+        # Atualizar o embed com os participantes
         embed.set_field_at(index=4, name="Participantes", value=participantes_str, inline=False)
         embed.color = discord.Color.gold()
+
 
         # Criar botão "Concluir"
         concluir_button = Button(label="Concluir", style=discord.ButtonStyle.blurple)
@@ -117,8 +129,7 @@ async def selecionar_participantes(interaction: discord.Interaction, nome: str, 
             )
             
             
-            if mural: #verifica se o canal mural existe
-                
+            if mural: #verifica se o canal mural existe                
                 await mural.send(
                     content=f"🎯 **Missão concluída!**\n"
                     f"**Missão:** [{nome.upper()}]({link_missao})\n"
