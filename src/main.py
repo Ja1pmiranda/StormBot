@@ -17,7 +17,7 @@ with open(r"./dados/dados.json", "r", encoding="utf-8") as file:
     dados = json.load(file)
 
 niveis = dados["niveis"]
-PARTICIPANTES = dados["nomes"]
+PARTICIPANTES = dados["nomes_europa"]
 
 class MyClient(discord.Client):
     def __init__(self):
