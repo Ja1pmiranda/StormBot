@@ -1,13 +1,13 @@
 {
-    "niveis": [
-      "Cósmico",
-      "Divíno",
-      "Imperial",
-      "Real",
-      "Santo",
-      "Avançado",
-      "Principiante"
-    ],
+    "niveis": {
+        "principiante": "#8B4513",
+        "avançado": "#FFD700",
+        "santo": "#00FF00",
+        "real": "#00BFFF",
+        "imperial": "#FF0000",
+        "divino": "#000000",
+        "cosmico": "#FFFFFF"
+    },
 
     "nomes": {
         "Vael":166732375903043585,
@@ -105,39 +105,39 @@
         "Maui":0
     },
 
-    "nomes_asia1":{
-        "Gozen":0,
-        "Hatori":0,
-        "Musashi":0,
-        "Senji":0,
-        "Nohime":0,
-        "Osakabehime":0,
-        "Abe no Seimei":0,
-        "Nu Wa":0,
-        "Da Shi":0,
-        "Bikou":0,
-        "Qin":0,
-        "Mulan":0,
-        "Heixin":0,
-        "Iaohu Zuo":0        
-    },
-
-    "nomes_asia2":{
-        "Karna":0,
-        "Arjuna":0,
-        "Soma":0,
-        "Bhima":0,
-        "Nakula":0,
-        "Sahadeva":0,
-        "Narada":0,
-        "Shaka":0,
-        "Lakshmiba":0,
+    "nomes_oeste_asia":{
         "Gilgamesh":0,
         "Hassan":0,
         "Solomon":0,
         "Semiramis":0,
         "Sheherazade":0,
-        "Rathsi":0
+        "Rathsi":0,
+        "Nakula":0,
+        "Sahadeva":0,
+        "Shaka":0,
+        "Karna":0,
+        "Narada":0,
+        "Lakshmiba":0,
+        "Bhima":0,
+        "Arjuna":0,
+        "Soma":0                
+    },
+
+    "nomes_leste_asia":{
+        "Nu Wa":0,
+        "Qin":0,
+        "Mulan":0,
+        "Heixin":0,
+        "Iaohu Zuo":0,
+        "Bikou":0,
+        "Da Shi":0,
+        "Abe no Seimei":0,
+        "Gozen":0,
+        "Hatori":0,
+        "Musashi":0,
+        "Senji":0,
+        "Nohime":0,
+        "Osakabehime":0
     }
 
 }
