@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
+from discord.ui import Select, View, Button
 import json
-from discord.ui import Button, View, Select
 from dotenv import load_dotenv
 import os
 
@@ -10,14 +10,16 @@ load_dotenv()
 
 token = os.getenv("STORM_TOKEN")
 id_do_servidor = int(os.getenv("ID_STORM"))
-mural_id = int(os.getenv("ID_MURAL"))
 
 # Carregar dados do JSON
 with open(r"./dados/dados.json", "r", encoding="utf-8") as file:
     dados = json.load(file)
 
 niveis = dados["niveis"]
-PARTICIPANTES = dados["nomes_europa"]
+PARTICIPANTES1 = dados["nomes_europa"]
+PARTICIPANTES2 = dados["nomes_oeste_asia"]
+PARTICIPANTES3 = dados["nomes_leste_asia"]
+PARTICIPANTES4 = dados["nomes_africa/oceania"]
 
 class MyClient(discord.Client):
     def __init__(self):
@@ -32,7 +34,8 @@ class MyClient(discord.Client):
         print(f"Bot conectado como {self.user}")
 
 client = MyClient()
-##--------------------------------------------------POSTAR MISSÃO----------------------------------------------------
+
+## -------------------------------------------------- POSTAR MISSÃO --------------------------------------------------
 
 @client.tree.command(guild=discord.Object(id=id_do_servidor), name="postar_missao", description="Postar uma nova missão.")
 @app_commands.describe(
@@ -45,171 +48,99 @@ client = MyClient()
 async def postar_missao(interaction: discord.Interaction, nome: str, descricao: str, duracao: str, categorias: str, obs: str):
     await criar_missao(interaction, nome, descricao, duracao, categorias, obs)
 
-async def criar_missao(interaction: discord.Interaction, nome: str, descricao: str, duracao: str, categorias: str, obs: str):
-    embed = discord.Embed(title=f" **{nome.upper()}**")
-    nome_do_canal = interaction.channel.name
-    match nome_do_canal.lower():
-        case "principiante":
-            embed.color = discord.Color.from_str('#8B4513')  # Marrom
-        case "avançado":
-            embed.color = discord.Color.from_str('#FFD700')  # Dourado
-        case "santo":
-            embed.color = discord.Color.from_str('#00FF00')  # Verde
-        case "real":
-            embed.color = discord.Color.from_str('#00BFFF')  # Azul brilhante
-        case "imperial":
-            embed.color = discord.Color.from_str('#FF0000')  # Vermelho
-        case "divino":
-            embed.color = discord.Color.from_str('#000000')  # Preto
-        case "cosmico":
-            embed.color = discord.Color.from_str('#FFFFFF')  # Branco
-        case _:
-            embed.color = discord.Color.default()  # Cor padrão se nenhum caso for correspondido
+class ParticipanteDropdown(Select):
+    def __init__(self, participantes, placeholder, embed: discord.Embed, field_name: str):
+        self.embed = embed
+        self.field_name = field_name
+        options = [discord.SelectOption(label=p) for p in participantes]
+        super().__init__(placeholder=placeholder, min_values=1, max_values=len(participantes), options=options)
 
-    
+    async def callback(self, interaction: discord.Interaction):
+        novos_participantes = set(self.values)
+
+        # Recupera os participantes atuais
+        for field in self.embed.fields:
+            if field.name == self.field_name:
+                participantes_atuais = set(field.value.split(", ")) if field.value != "Nenhum participante ainda." else set()
+                participantes_atualizados = participantes_atuais.symmetric_difference(novos_participantes)
+                participantes_str = ", ".join(sorted(participantes_atualizados)) if participantes_atualizados else "Nenhum participante ainda."
+                self.embed.set_field_at(
+                    self.embed.fields.index(field),
+                    name=self.field_name,
+                    value=participantes_str,
+                    inline=False
+                )
+                break
+
+        await interaction.response.edit_message(embed=self.embed)
+
+
+class MissaoView(View):
+    def __init__(self, embed: discord.Embed):
+        super().__init__()
+        self.embed = embed
+        # Usar custom_id exclusivo
+        self.add_item(Button(label="Aceitar", style=discord.ButtonStyle.primary, custom_id="aceitar_1_missao"))
+
+    @discord.ui.button(label="Aceitar", style=discord.ButtonStyle.primary, custom_id="aceitar_1_missao")
+    async def aceitar_callback(self, button: Button, interaction: discord.Interaction):
+        dropdown_view = EditarParticipantesView(self.embed)
+        await interaction.response.edit_message(embed=self.embed, view=dropdown_view)
+
+
+class EditarParticipantesView(View):
+    def __init__(self, embed: discord.Embed):
+        super().__init__()
+        self.embed = embed
+        # Adicionar custom_ids exclusivos para cada botão
+        self.add_item(ParticipanteDropdown(PARTICIPANTES1, "Europa", embed, "Participantes"))
+        self.add_item(ParticipanteDropdown(PARTICIPANTES2, "Oeste da Ásia", embed, "Participantes"))
+        self.add_item(ParticipanteDropdown(PARTICIPANTES3, "Leste da Ásia", embed, "Participantes"))
+        self.add_item(ParticipanteDropdown(PARTICIPANTES4, "África/Oceania", embed, "Participantes"))
+        self.add_item(Button(label="Confirmar", style=discord.ButtonStyle.success, custom_id="confirmar_1_editar"))
+
+    @discord.ui.button(label="Confirmar", style=discord.ButtonStyle.success, custom_id="confirmar_1_editar")
+    async def confirmar_callback(self, button: Button, interaction: discord.Interaction):
+        confirmar_view = ConfirmarView(self.embed)
+        await interaction.response.edit_message(embed=self.embed, view=confirmar_view)
+
+
+class ConfirmarView(View):
+    def __init__(self, embed: discord.Embed):
+        super().__init__()
+        self.embed = embed
+        # Custom_id exclusivo para o botão
+        self.add_item(Button(label="Editar", style=discord.ButtonStyle.secondary, custom_id="editar_1_confirmar"))
+
+    @discord.ui.button(label="Editar", style=discord.ButtonStyle.secondary, custom_id="editar_1_confirmar")
+    async def editar_callback(self, button: Button, interaction: discord.Interaction):
+        editar_view = EditarParticipantesView(self.embed)
+        await interaction.response.edit_message(embed=self.embed, view=editar_view)
+
+
+async def criar_missao(interaction: discord.Interaction, nome: str, descricao: str, duracao: str, categorias: str, obs: str):
+    embed = discord.Embed(title=f"**{nome.upper()}**")
+    nome_do_canal = interaction.channel.name.lower()
+
+    cores_por_nivel = {
+        "principiante": discord.Color.from_str('#8B4513'),
+        "avançado": discord.Color.from_str('#FFD700'),
+        "santo": discord.Color.from_str('#00FF00'),
+        "real": discord.Color.from_str('#00BFFF'),
+        "imperial": discord.Color.from_str('#FF0000'),
+        "divino": discord.Color.from_str('#000000'),
+        "cosmico": discord.Color.from_str('#FFFFFF')
+    }
+
+    embed.color = cores_por_nivel.get(nome_do_canal, discord.Color.default())
     embed.add_field(name="Descrição", value=descricao, inline=False)
     embed.add_field(name="Duração", value=duracao, inline=True)
     embed.add_field(name="Categorias", value=categorias, inline=False)
     embed.add_field(name="Observações", value=obs, inline=True)
     embed.add_field(name="Participantes", value="Nenhum participante ainda.", inline=False)
 
-    accept_button = Button(label="Aceitar", style=discord.ButtonStyle.green)
-
-    async def accept_callback(interaction: discord.Interaction):
-        await selecionar_participantes(interaction, nome, embed, interaction.message)
-
-    accept_button.callback = accept_callback
-
-    view = View()
-    view.add_item(accept_button)
-
+    view = MissaoView(embed)
     await interaction.response.send_message(embed=embed, view=view)
-
-async def selecionar_participantes(interaction: discord.Interaction, nome: str, embed: discord.Embed, original_message: discord.Message):
-    select_menu = Select(
-        placeholder="Selecione os participantes",
-        options=[discord.SelectOption(label=nome, value=nome) for nome in PARTICIPANTES],
-        min_values=1,  # Número mínimo de seleções
-        max_values=len(PARTICIPANTES)  # Número máximo de seleções
-    )
-
-    async def select_callback(interaction: discord.Interaction):
-        # Defere a interação imediatamente
-        await interaction.response.defer(ephemeral=True)
-
-        # Obter os participantes ja listados
-        participantes_atuais = embed.fields[4].value
-        if participantes_atuais == "Nenhum participante ainda.":
-            participantes_atuais = ""
-        
-        lista_atual = [p.strip() for p in participantes_atuais.split(",") if p.strip()]
-
-        # Adicionar novos participantes
-        novos_selecionados = select_menu.values
-        lista_atual.extend([p for p in novos_selecionados if p not in lista_atual])
-
-        #Atualiza a lista final
-        participantes_str = ", ".join(lista_atual)
-
-        # Atualizar o embed com os participantes
-        embed.set_field_at(index=4, name="Participantes", value=participantes_str, inline=False)
-        #embed.color = discord.Color.gold()
-
-
-        # Criar botão "Concluir"
-        concluir_button = Button(label="Concluir", style=discord.ButtonStyle.blurple)
-
-        # Mandar mensagem no mural
-        mural = interaction.guild.get_channel(mural_id)
-        if mural: #verifica se o canal mural existe
-            link_missao = original_message.jump_url
-            await mural.send(
-                content=f"A missão **{nome.upper()}** foi aceita por\n"
-                f"**{participantes_str}**\n"
-                f"Confira os detalhes aqui: [{nome.upper()}]({link_missao})"
-            )
-            await mural.send(embed=embed)
-        else:
-            await interaction.response.send_message(
-                content="Erro: O canal Mural não foi encontrado.",
-                ephemeral=True
-            )
-
-        async def concluir_callback(interaction: discord.Interaction):
-            link_missao = original_message.jump_url
-            #embed.color = discord.Color.green()
-            await original_message.edit(embed=embed, view=None)
-
-            # Enviar mensagem para o mural
-            await interaction.response.send_message(
-                content=f"**Missão concluída**🎉:\n"
-                f"[{nome.upper()}]({link_missao})\n"
-                f"**Participantes:**\n"
-                f"{participantes_str}",
-                ephemeral=False
-            )
-
-            if mural:  # Verifica se o canal mural existe
-                await mural.send(
-                    content=f"🎯 **Missão concluída!**\n"
-                    f"**Missão:** [{nome.upper()}]({link_missao})\n"
-                    f"**Participantes:** {participantes_str}\n"
-                )
-                await mural.send(embed=embed)
-            else:
-                await interaction.response.send_message(
-                    content="Erro: O canal Mural não foi encontrado.",
-                    ephemeral=True
-                )
-
-            # Enviar mensagem privada para cada participante utilizando o ID
-            for participante_nome in lista_atual:
-                # Buscar o ID do participante no dicionário
-                participante_id = dados["nomes"].get(participante_nome)
-
-                if participante_id:  # Se o ID foi encontrado
-                    try:
-                        # Buscar o usuário diretamente pelo ID
-                        participante = await client.fetch_user(participante_id)
-                        if participante:  # Verifica se o usuário foi encontrado
-                            # Enviar DM
-                            await participante.send(
-                                content=f"🎯 A missão **{nome.upper()}** foi concluída com sucesso!\n"
-                                        f"Confira os detalhes da missão aqui: [{nome.upper()}]({link_missao})"
-                            )
-    
-                    except discord.errors.Forbidden:
-                        # Caso o bot não tenha permissão para enviar DM
-                        print(f"Não foi possível enviar DM para {participante_nome} (ID: {participante_id})")
-                    except discord.errors.HTTPException as e:
-                        # Tratar outros erros relacionados ao envio de mensagens
-                        print(f"Erro ao enviar DM para {participante_nome} (ID: {participante_id}): {e}")
-                else:
-                    print(f"ID não encontrado para o participante {participante_nome}")
-
-            
-
-        concluir_button.callback = concluir_callback
-
-        # Atualizar o View para manter o Select e adicionar o botão "Concluir"
-        view = View()
-        view.add_item(select_menu)  # Adiciona o Select novamente
-        view.add_item(concluir_button)  # Adiciona o botão "Concluir"
-
-        # Atualizar a mensagem original com o novo View
-        await original_message.edit(embed=embed, view=view)
-
-    select_menu.callback = select_callback
-
-    # Atualizar a mensagem original com o Select
-    view = View()
-    view.add_item(select_menu)
-
-    # Defere a interação inicial
-    await interaction.response.defer()
-
-    await original_message.edit(view=view)
-
 
 
 client.run(token)
